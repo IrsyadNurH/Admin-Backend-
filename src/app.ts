@@ -27,6 +27,7 @@ dotenv.config();
 const app = express();
 app.use(express.json()); 
 app.use(aboutUsRoutes);
+app.set('trust proxy', true);
 
 app.use(cors({
   origin: ['http://localhost:3000','https://www.google.com'],

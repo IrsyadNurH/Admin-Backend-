@@ -23,6 +23,7 @@ router.post('/logout', async (req, res) => {
   try {
     // Get device information
     const userAgent = req.headers['user-agent'] || '';
+    const userTimezone = req.headers['x-timezone'] as string || 'Asia/Jakarta';
     const parser = new UAParser(userAgent);
     const ipAddress = getClientIP(req);
     
@@ -35,10 +36,10 @@ router.post('/logout', async (req, res) => {
     // Clear auth token
     res.clearCookie('token');
     
-    // Log the logout action with device info
+    // Log the logout action with device info and timezone
     await pool.query(
-      'INSERT INTO logs (action, timestamp, device_info, ip_address) VALUES ($1, CURRENT_TIMESTAMP, $2, $3)',
-      ['logout', deviceInfo, ipAddress]
+      'INSERT INTO logs (action, timestamp, device_info, ip_address, user_timezone) VALUES ($1, CURRENT_TIMESTAMP AT TIME ZONE $2, $3, $4, $5)',
+      ['logout', userTimezone, deviceInfo, ipAddress, userTimezone]
     );
     
     res.status(200).json({

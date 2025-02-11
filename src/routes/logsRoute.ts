@@ -1,6 +1,7 @@
 import express from 'express';
 import { Pool } from 'pg';
 import pool from '../config/database';
+import { UAParser } from 'ua-parser-js';
 
 const router = express.Router();
 
@@ -8,25 +9,34 @@ interface LogEntry {
   id?: number;
   action: 'login' | 'logout';
   timestamp: Date;
-  user_email: string;
+  device_info: string;
+  ip_address: string;
   user_timezone?: string;
-
 }
+
+
+// Helper function to get client IP
+const getClientIP = (req: express.Request): string => {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    return Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0];
+  }
+  return req.socket.remoteAddress || 'Unknown IP';
+};
+
 
 router.get('/logs', async (req, res) => {
   try {
     console.log('GET /logs request received');
     const userTimezone = req.headers['x-timezone'] as string || 'Asia/Jakarta';
     
-    // Test database connection
-    await pool.query('SELECT NOW()');
-    
     const query = `
       SELECT 
         id,
         action,
         timestamp AT TIME ZONE 'UTC' AT TIME ZONE $1 as timestamp,
-        user_email,
+        device_info,
+        ip_address,
         COALESCE(user_timezone, $1) as user_timezone
       FROM logs 
       ORDER BY timestamp DESC
@@ -44,14 +54,25 @@ router.get('/logs', async (req, res) => {
     });
   }
 });
-// GET all logs
+
 router.post('/logs', async (req, res) => {
-  const { action, user_email, timezone } = req.body;
   try {
+    const { action, timezone } = req.body;
+    const userAgent = req.headers['user-agent'] || '';
+    const parser = new UAParser(userAgent);
+    const ipAddress = getClientIP(req);
+    
+    const device = parser.getDevice();
+    const os = parser.getOS();
+    const browser = parser.getBrowser();
+    
+    const deviceInfo = `${device.type || 'Desktop'} - ${os.name || 'Unknown OS'} ${os.version || ''} (${browser.name || 'Unknown Browser'}) - IP: ${ipAddress}`;
+
     const result = await pool.query(
-      'INSERT INTO logs (action, timestamp, user_email, user_timezone) VALUES ($1, CURRENT_TIMESTAMP AT TIME ZONE $2, $3, $4) RETURNING *',
-      [action, timezone || 'Asia/Jakarta', user_email, timezone || 'Asia/Jakarta']
+      'INSERT INTO logs (action, timestamp, device_info, ip_address, user_timezone) VALUES ($1, CURRENT_TIMESTAMP AT TIME ZONE $2, $3, $4, $5) RETURNING *',
+      [action, timezone || 'Asia/Jakarta', deviceInfo, ipAddress, timezone || 'Asia/Jakarta']
     );
+    
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('Error creating log:', err);
@@ -59,19 +80,28 @@ router.post('/logs', async (req, res) => {
   }
 });
 
-
-// UPDATE log
 router.put('/logs/:id', async (req, res) => {
-  const { id } = req.params;
-  const { action, user_email } = req.body;
   try {
+    const { id } = req.params;
+    const { action } = req.body;
+    const userAgent = req.headers['user-agent'] || '';
+    const parser = new UAParser(userAgent);
+    const ipAddress = getClientIP(req);
+    
+    const device = parser.getDevice();
+    const os = parser.getOS();
+    const browser = parser.getBrowser();
+    
+    const deviceInfo = `${device.type || 'Desktop'} - ${os.name || 'Unknown OS'} ${os.version || ''} (${browser.name || 'Unknown Browser'}) - IP: ${ipAddress}`;
+
     const result = await pool.query(
-      'UPDATE logs SET action = $1, user_email = $2 WHERE id = $3 RETURNING *',
-      [action, user_email, id]
+      'UPDATE logs SET action = $1, device_info = $2, ip_address = $3 WHERE id = $4 RETURNING *',
+      [action, deviceInfo, ipAddress, id]
     );
+    
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'Log not found' });
-      return ;
+      return;
     }
     res.json(result.rows[0]);
   } catch (err) {

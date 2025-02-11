@@ -17,7 +17,10 @@ import projectTestimoniRoutes from './routes/ProjectTestimoniRoutes';
 import KerjasamaDevRoute from './routes/KerjasamaDevRoute';
 import logsRoutes from './routes/logsRoute';
 import testimonialRoutes from './routes/testimonialRoute';
-import projectTestimonialRouter from './routes/projectTestimonialRoute';
+import projectTestiClientRoute from './routes/ProjectTestiClientRoute';
+import developmentAppLogoRoute from './routes/DevelopmentApplicationLogoRoute';
+import securityMitraLogoRoute from './routes/securityMitraLogoRoute';
+import dokumentasiRoute from './routes/dokumentasiRoute';
 
 dotenv.config();
 
@@ -58,7 +61,7 @@ app.get('/about-us', (req, res) => {
 });
 
 // Menggunakan rute admin
-app.use("/api", adminRoutes,aboutUsRoutes,authRoutes,logoutRouter,forgetPasswordRoute,konsultasiRoutes,projectBimbleRoutes,footerRoutes,kontakKamiRouter,programContentRouter,projectTestimoniRoutes,KerjasamaDevRoute,logsRoutes,testimonialRoutes,projectTestimonialRouter);  // Pastikan rute /api terhubung ke adminRoutes/aboutUsRoutes
+app.use("/api", adminRoutes,aboutUsRoutes,authRoutes,logoutRouter,forgetPasswordRoute,konsultasiRoutes,projectBimbleRoutes,footerRoutes,kontakKamiRouter,programContentRouter,projectTestimoniRoutes,KerjasamaDevRoute,logsRoutes,testimonialRoutes,projectTestiClientRoute,developmentAppLogoRoute,securityMitraLogoRoute,dokumentasiRoute);  // Pastikan rute /api terhubung ke adminRoutes/aboutUsRoutes
 
 // Error handler untuk menangani kesalahan yang tidak tertangani
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

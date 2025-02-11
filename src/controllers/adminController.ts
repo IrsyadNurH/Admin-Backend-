@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
-import { findAdminByEmail ,updateAdminEmail, updateAdminPassword} from '../models/adminModel';
+import { findAdminByEmail, updateAdminEmail, updateAdminPassword } from '../models/adminModel';
 import { verifyRecaptcha } from '../utils/verifyRecaptcha';
 
 // Fungsi untuk login admin
 export const loginAdmin = async (req: Request, res: Response) => {
+  console.log(req)
   const { email, password, recaptchaToken } = req.body;
 
   if (!email || !password || !recaptchaToken) {

@@ -2,58 +2,39 @@ import express, { Router, Request, Response } from "express";
 import { findAllAdmins } from "../models/adminModel";  // Pastikan path-nya benar
 import pool from '../config/database';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { JsonWebTokenError } from 'jsonwebtoken';
 
-const router: Router = express.Router();
 
-// Endpoint untuk login
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
+const adminRouterDanger = express.Router()
 
-    // Find admin by email
-    const result = await pool.query('SELECT * FROM admins WHERE email = $1', [email]);
-    const admin = result.rows[0];
-
-    if (!admin) {
-       res.status(401).json({ message: 'Invalid credentials' });
-       return;
-    }
-
-    // Compare passwords
-    const isValidPassword = await bcrypt.compare(password, admin.password);
-
-    if (!isValidPassword) {
-       res.status(401).json({ message: 'Invalid credentials' });
-       return;
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: admin.id, email: admin.email },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '1h' }
-    );
-
-    // Send response with token
-    res.status(200).json({
-      message: 'Login successful',
-      token,
-      admin: {
-        id: admin.id,
-        email: admin.email
+//middleware verifikasi token jwt
+adminRouterDanger.use((req, res, next) => {
+  const { authorization } = req.headers;
+  // console.log(req.headers)
+  if (authorization !== undefined && authorization !== null) {
+    try {
+      const verified = jwt.verify(authorization, process.env.JWT_SECRET!!)
+      if (verified === undefined || verified === null) {
+        res.status(401).send({ message: "Token Invalid" })
+        return
       }
-    });
 
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' });
+      // return 
+    } catch (err: any) {
+      console.log(err.message)
+      res.status(401).send({ message: "Token Invalid" })
+      return
+    }
   }
-});
-
+  else {
+    res.status(401).send({ message: "Unauthorized" })
+    return
+  }
+  next()
+})
 
 // Endpoint untuk mengambil daftar admin
-router.get("/admins", async (req: Request, res: Response): Promise<void> => {
+adminRouterDanger.get("/admins", async (req: Request, res: Response): Promise<void> => {
   try {
     // Ambil semua data admin dari database
     const admins = await findAllAdmins();  // Mengambil semua admin
@@ -73,7 +54,7 @@ router.get("/admins", async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-router.put("/admins/email/:id", async (req: Request, res: Response): Promise<void> => {
+adminRouterDanger.put("/admins/email/:id", async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const { newEmail } = req.body;
@@ -105,7 +86,7 @@ router.put("/admins/email/:id", async (req: Request, res: Response): Promise<voi
     }
 
     console.log("Email updated successfully");
-    res.status(200).json({ 
+    res.status(200).json({
       message: "Email updated successfully",
       admin: result.rows[0]
     });
@@ -117,7 +98,7 @@ router.put("/admins/email/:id", async (req: Request, res: Response): Promise<voi
 });
 
 // Update admin password
-router.put("/admins/password/:id", async (req: Request, res: Response): Promise<void> => {
+adminRouterDanger.put("/admins/password/:id", async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const { newPassword } = req.body;
@@ -149,4 +130,4 @@ router.put("/admins/password/:id", async (req: Request, res: Response): Promise<
   }
 });
 
-export default router;
+export default adminRouterDanger;

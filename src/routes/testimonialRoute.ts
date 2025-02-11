@@ -14,7 +14,7 @@ router.get('/testimonial', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching testimonials:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch testimonials',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -25,13 +25,13 @@ router.get('/testimonial', async (req, res) => {
 router.post("/testimonial", upload.single("image"), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
-       res.status(400).json({ error: "Image file is required" });
-       return;
+      res.status(400).json({ error: "Image file is required" });
+      return;
     }
 
     if (!req.body.name || !req.body.university || !req.body.testimonial) {
-       res.status(400).json({ error: "All fields are required" });
-       return;
+      res.status(400).json({ error: "All fields are required" });
+      return;
     }
 
     // Upload image to ImageKit
@@ -50,7 +50,7 @@ router.post("/testimonial", upload.single("image"), async (req: Request, res: Re
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error("Error creating testimonial:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Failed to create testimonial",
       details: err instanceof Error ? err.message : 'Unknown error'
     });
@@ -83,7 +83,7 @@ router.put('/testimonial/:id', upload.single('image'), async (req: Request, res:
           fileName: `testimonial-${Date.now()}-${req.file.originalname}`,
           folder: '/testimonials'
         });
-        
+
         // Delete old image if exists
         if (imageUrl) {
           const fileId = getImageKitFileId(imageUrl);
@@ -95,10 +95,10 @@ router.put('/testimonial/:id', upload.single('image'), async (req: Request, res:
             }
           }
         }
-        
+
         imageUrl = uploadResponse.url;
       } catch (uploadError) {
-         res.status(500).json({ 
+        res.status(500).json({
           error: 'Failed to upload new image',
           details: uploadError instanceof Error ? uploadError.message : 'Unknown error'
         });
@@ -129,9 +129,9 @@ router.put('/testimonial/:id', upload.single('image'), async (req: Request, res:
     const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
-       res.status(404).json({ error: 'Testimonial not found' });
-       return;
-      }
+      res.status(404).json({ error: 'Testimonial not found' });
+      return;
+    }
 
     res.json({
       message: 'Testimonial updated successfully',
@@ -139,7 +139,7 @@ router.put('/testimonial/:id', upload.single('image'), async (req: Request, res:
     });
   } catch (err) {
     console.error('Error updating testimonial:', err);
-     res.status(500).json({
+    res.status(500).json({
       error: 'Failed to update testimonial',
       details: err instanceof Error ? err.message : 'Unknown error'
     });
@@ -158,7 +158,7 @@ router.delete('/testimonial/:id', async (req: Request, res: Response) => {
 
     if (testimonial.rows.length === 0) {
       res.status(404).json({ error: 'Testimonial not found' });
-      return ;
+      return;
     }
 
     // Extract image filename from URL
@@ -177,7 +177,7 @@ router.delete('/testimonial/:id', async (req: Request, res: Response) => {
       pool.query('DELETE FROM testimonials WHERE id = $1 RETURNING *', [req.params.id])
     ]);
 
-    res.json({ 
+    res.json({
       message: 'Testimonial deleted successfully',
       testimonial: testimonial.rows[0]
     });

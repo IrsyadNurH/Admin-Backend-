@@ -3,6 +3,10 @@ import { getAboutUs, updateAboutUs, insertAboutUs } from '../models/AboutUs';
 
 const router = express.Router();
 
+router.use((req, res, next) => {
+  next()
+})
+
 // Endpoint untuk mendapatkan semua data "About Us"
 router.get('/about-us', async (req, res) => {
   try {
@@ -23,9 +27,9 @@ router.put('/about-us/:id', async (req, res) => {
 
   // Validasi jika ID atau konten yang dikirim valid
   if (!id || !content_type || !content) {
-     res.status(400).json({ message: 'ID, contentType, and content are required' });
-     return;
-    }
+    res.status(400).json({ message: 'ID, contentType, and content are required' });
+    return;
+  }
 
   try {
     // Lakukan pembaruan pada data berdasarkan ID

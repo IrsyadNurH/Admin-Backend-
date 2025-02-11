@@ -3,9 +3,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY || "6Lfmx9EqAAAAAMJxAA_46697kk8Anik_eC6Hs5kO";
+if (!process.env.RECAPTCHA_SECRET_KEY) {
+  throw new Error('RECAPTCHA_SECRET_KEY is not defined in environment variables');
+}
 
-const verifyRecaptcha = async (recaptchaToken: string) => {
+const verifyRecaptcha = async (recaptchaToken: string): Promise<boolean> => {
   if (!recaptchaToken) {
     console.error("No reCAPTCHA token provided");
     return false;
@@ -17,7 +19,7 @@ const verifyRecaptcha = async (recaptchaToken: string) => {
       null,
       {
         params: {
-          secret: SECRET_KEY,
+          secret: process.env.RECAPTCHA_SECRET_KEY,
           response: recaptchaToken,
         },
       }

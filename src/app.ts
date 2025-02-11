@@ -17,6 +17,7 @@ import projectTestimoniRoutes from './routes/ProjectTestimoniRoutes';
 import KerjasamaDevRoute from './routes/KerjasamaDevRoute';
 import logsRoutes from './routes/logsRoute';
 import testimonialRoutes from './routes/testimonialRoute';
+import projectTestimonialRouter from './routes/projectTestimonialRoute';
 
 dotenv.config();
 
@@ -25,11 +26,17 @@ app.use(express.json());
 app.use(aboutUsRoutes);
 
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000','https://www.google.com'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-timezone', 'Accept']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-timezone', 'Accept','Cross-Origin-Resource-Policy'],
+  exposedHeaders: ['Cross-Origin-Resource-Policy']
 }));
+
+app.use((req, res, next) => {
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
 
 app.use(express.json());
 app.use(bodyParser.json());
@@ -51,7 +58,7 @@ app.get('/about-us', (req, res) => {
 });
 
 // Menggunakan rute admin
-app.use("/api", adminRoutes,aboutUsRoutes,authRoutes,logoutRouter,forgetPasswordRoute,konsultasiRoutes,projectBimbleRoutes,footerRoutes,kontakKamiRouter,programContentRouter,projectTestimoniRoutes,KerjasamaDevRoute,logsRoutes,testimonialRoutes);  // Pastikan rute /api terhubung ke adminRoutes/aboutUsRoutes
+app.use("/api", adminRoutes,aboutUsRoutes,authRoutes,logoutRouter,forgetPasswordRoute,konsultasiRoutes,projectBimbleRoutes,footerRoutes,kontakKamiRouter,programContentRouter,projectTestimoniRoutes,KerjasamaDevRoute,logsRoutes,testimonialRoutes,projectTestimonialRouter);  // Pastikan rute /api terhubung ke adminRoutes/aboutUsRoutes
 
 // Error handler untuk menangani kesalahan yang tidak tertangani
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
